@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf, #e94560);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .api-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .api-section h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-badge {
+            background: #10b981;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .endpoint {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        input::placeholder {
+            color: #64748b;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #e94560, #c73659);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+        }
+
+        .result-container {
+            margin-top: 20px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .result-header h3 {
+            color: #10b981;
+        }
+
+        .result-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(16, 185, 129, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #10b981;
+        }
+
+        .stat.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .result-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .result-box::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 4px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border-color: #00d4ff;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .product-slug {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .product-id {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00d4ff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .product-card {
+            position: relative;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #00d4ff;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #00d4ff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 15px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: #00d4ff;
+            border-color: #00d4ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Products API Tester</h1>
+
+        <!-- Get All Products with Filters -->
+        <div class="api-section">
+            <h2><span class="method-badge">GET</span> Lấy danh sách Products (có filter)</h2>
+            <div class="endpoint">/api/v1/products?title=&minPrice=&maxPrice=&slug=</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🔍 Title (tìm kiếm chứa)</label>
+                    <input type="text" id="filterTitle" placeholder="Ví dụ: Classic, Hoodie...">
+                </div>
+                <div class="form-group">
+                    <label>💰 Giá tối thiểu</label>
+                    <input type="number" id="filterMinPrice" placeholder="Ví dụ: 50">
+                </div>
+                <div class="form-group">
+                    <label>💰 Giá tối đa</label>
+                    <input type="number" id="filterMaxPrice" placeholder="Ví dụ: 100">
+                </div>
+                <div class="form-group">
+                    <label>🏷️ Slug (chính xác)</label>
+                    <input type="text" id="filterSlug" placeholder="Ví dụ: classic-heather-gray-hoodie">
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="fetchProducts()">🔎 Tìm kiếm</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">🗑️ Xóa filter</button>
+            </div>
+
+            <div class="result-container">
+                <div class="result-header">
+                    <h3>📦 Kết quả</h3>
+                    <div class="result-stats" id="productStats"></div>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="setView('cards')" id="viewCards">🎴 Cards</button>
+                    <button class="view-btn" onclick="setView('json')" id="viewJson">📄 JSON</button>
+                </div>
+                <div class="result-box" id="productsResult">
+                    <div class="empty-state">
+                        <p>Nhấn "Tìm kiếm" để xem kết quả</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Get Product by ID -->
+        <div class="api-section">
+            <h2><span class="method-badge">GET</span> Lấy Product theo ID</h2>
+            <div class="endpoint">/api/v1/products/:id</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🆔 Product ID</label>
+                    <input type="number" id="productId" placeholder="Nhập ID, ví dụ: 3, 6, 10...">
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="fetchProductById()">🔎 Tìm Product</button>
+
+            <div class="result-container">
+                <div class="result-header">
+                    <h3>📦 Kết quả</h3>
+                    <div class="result-stats" id="singleProductStats"></div>
+                </div>
+                <div class="result-box" id="singleProductResult">
+                    <div class="empty-state">
+                        <p>Nhập ID và nhấn "Tìm Product" để xem kết quả</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1/products';
+        let currentView = 'cards';
+
+        function setView(view) {
+            currentView = view;
+            document.getElementById('viewCards').classList.toggle('active', view === 'cards');
+            document.getElementById('viewJson').classList.toggle('active', view === 'json');
+            
+            // Re-render if we have data
+            const resultBox = document.getElementById('productsResult');
+            if (resultBox.dataset.products) {
+                renderProducts(JSON.parse(resultBox.dataset.products));
+            }
+        }
+
+        async function fetchProducts() {
+            const title = document.getElementById('filterTitle').value;
+            const minPrice = document.getElementById('filterMinPrice').value;
+            const maxPrice = document.getElementById('filterMaxPrice').value;
+            const slug = document.getElementById('filterSlug').value;
+
+            // Build query string
+            const params = new URLSearchParams();
+            if (title) params.append('title', title);
+            if (minPrice) params.append('minPrice', minPrice);
+            if (maxPrice) params.append('maxPrice', maxPrice);
+            if (slug) params.append('slug', slug);
+
+            const url = `${API_BASE}${params.toString() ? '?' + params.toString() : ''}`;
+            
+            const resultBox = document.getElementById('productsResult');
+            const statsBox = document.getElementById('productStats');
+            
+            resultBox.innerHTML = '<div class="loading">Đang tải</div>';
+            statsBox.innerHTML = '';
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url);
+                const endTime = performance.now();
+                const data = await response.json();
+                
+                // Store data for view toggle
+                resultBox.dataset.products = JSON.stringify(data);
+                
+                // Update stats
+                statsBox.innerHTML = `
+                    <span class="stat">📊 ${data.length} sản phẩm</span>
+                    <span class="stat">⏱️ ${(endTime - startTime).toFixed(0)}ms</span>
+                    <span class="stat">🔗 ${url}</span>
+                `;
+                
+                renderProducts(data);
+            } catch (error) {
+                resultBox.innerHTML = `<pre style="color: #ef4444;">Lỗi: ${error.message}</pre>`;
+                statsBox.innerHTML = '<span class="stat error">❌ Error</span>';
+            }
+        }
+
+        function renderProducts(data) {
+            const resultBox = document.getElementById('productsResult');
+            
+            if (data.length === 0) {
+                resultBox.innerHTML = '<div class="empty-state"><p>Không tìm thấy sản phẩm nào</p></div>';
+                return;
+            }
+
+            if (currentView === 'json') {
+                resultBox.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                resultBox.innerHTML = `
+                    <div class="product-grid">
+                        ${data.map(product => `
+                            <div class="product-card">
+                                <span class="product-id">ID: ${product.id}</span>
+                                <img class="product-image" src="${product.images[0]}" alt="${product.title}" 
+                                     onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                                <div class="product-info">
+                                    <div class="product-title">${product.title}</div>
+                                    <div class="product-price">$${product.price}</div>
+                                    <div class="product-slug">slug: ${product.slug}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        async function fetchProductById() {
+            const id = document.getElementById('productId').value;
+            
+            if (!id) {
+                alert('Vui lòng nhập Product ID');
+                return;
+            }
+
+            const url = `${API_BASE}/${id}`;
+            const resultBox = document.getElementById('singleProductResult');
+            const statsBox = document.getElementById('singleProductStats');
+            
+            resultBox.innerHTML = '<div class="loading">Đang tải</div>';
+            statsBox.innerHTML = '';
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url);
+                const endTime = performance.now();
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statsBox.innerHTML = `
+                        <span class="stat">✅ Thành công</span>
+                        <span class="stat">⏱️ ${(endTime - startTime).toFixed(0)}ms</span>
+                    `;
+                    
+                    resultBox.innerHTML = `
+                        <div class="product-grid">
+                            <div class="product-card">
+                                <span class="product-id">ID: ${data.id}</span>
+                                <img class="product-image" src="${data.images[0]}" alt="${data.title}"
+                                     onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                                <div class="product-info">
+                                    <div class="product-title">${data.title}</div>
+                                    <div class="product-price">$${data.price}</div>
+                                    <div class="product-slug">slug: ${data.slug}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h4 style="margin: 20px 0 10px; color: #00d4ff;">📄 Full JSON Response:</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    statsBox.innerHTML = `
+                        <span class="stat error">❌ ${response.status} Not Found</span>
+                        <span class="stat">⏱️ ${(endTime - startTime).toFixed(0)}ms</span>
+                    `;
+                    resultBox.innerHTML = `<pre style="color: #ef4444;">${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultBox.innerHTML = `<pre style="color: #ef4444;">Lỗi: ${error.message}</pre>`;
+                statsBox.innerHTML = '<span class="stat error">❌ Error</span>';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filterTitle').value = '';
+            document.getElementById('filterMinPrice').value = '';
+            document.getElementById('filterMaxPrice').value = '';
+            document.getElementById('filterSlug').value = '';
+        }
+
+        // Load all products on page load
+        window.onload = function() {
+            fetchProducts();
+        };
+    </script>
+</body>
+</html>
